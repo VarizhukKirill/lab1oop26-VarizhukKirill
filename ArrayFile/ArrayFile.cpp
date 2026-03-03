@@ -1,279 +1,149 @@
-﻿ // ArrayFile.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
-//
+﻿#include <iostream>   // Для введення/виведення (cin, cout)
+#include <fstream>    // Для роботи з файлами (ifstream, ofstream)
+#include <vector>     // Для контейнера vector (завдання 3.4)
+#include <ctime>      // Для генерації випадкових чисел (time)
+#include <iomanip>    // Для форматування виводу (setw)
 
-#include <iostream>
-#include <fstream>
-#include <ios>
-#include <vector>
+using namespace std;  // Використання стандартного простору імен
 
-#include <time.h>
+const int MAX_SIZE = 560; // Максимальний розмір для статичних масивів
 
-using namespace std;
-
-typedef double* pDouble;
-/*
-*   ConsoleInputArrayDouble
-*   
-*/
-int ConsoleInputSizeArray(const int sizeMax)
-{
-    int size = 0; 
+//  3.1: Введення розміру
+int ConsoleInputSizeArray(const int sizeMax) {
+    int size = 0; // Змінна для розміру
     do {
-        cout << " Input size Array ( 0< 1 < " << sizeMax << " ) ";
-        cin >> size;
-    } while (size <= 0 || size >= sizeMax);
-    return size;
-}
-/*
-*   ConsoleInputArrayDouble
-*
-*/
-int ConsoleInputArray(int sizeMax, double A[])
-{
-    int size = ConsoleInputSizeArray(sizeMax);
-        for (int i = 0; i < size; i++) {
-        cout << " Array[ " << i << "] "; cin >> A[i];
-    }
-    return size;
+        cout << "Введіть розмір масиву (0 < n < " << sizeMax << "): "; // Підказка
+        cin >> size; // Читання розміру
+    } while (size <= 0 || size >= sizeMax); // Перевірка коректності
+    return size; // Повернення значення
 }
 
-/*
-*   RndInputArrayDouble
-*
-*/
-int RndInputArray(int sizeMax, double A[])
-{
-    int size = ConsoleInputSizeArray(sizeMax);
-    int r1=0, r2=0;
-    srand(size);
-
-    for (int i = 0; i < size; i++) {
-        r1 = rand();
-        r2 = rand();
-        A[i] = 100.0 * r1;
-        A[i] = A[i] / (1.0 + r2);
-        cout << A[i] << "   ";
-    }
-    return size;
+//  3.1: Запис у текстовий файл
+void WriteArrayTextFile(int n, double* arr, const char* fileName) {
+    ofstream fout(fileName); // Відкриття файлу для запису
+    if (!fout) return;       // Перевірка чи відкрився файл
+    fout << n << endl;       // Запис кількості елементів
+    for (int i = 0; i < n; i++) fout << arr[i] << " "; // Запис самих чисел
+    fout.close();            // Закриття файлу
 }
 
-int ConsoleInputDynamicArrayNew(int sizeMax, pDouble &pA)
-{
-    int size = ConsoleInputSizeArray(sizeMax);
-    pA = new double[size];
-    if (pA == nullptr) { return 0; }
-    for (int i = 0; i < size; i++) {
-        cout << " Array[ " << i << "] "; cin >> pA[i];
-    }
-    return size;
+// 3.1: Читання з текстового файлу
+int ReadArrayTextFile(int maxSize, double* arr, const char* fileName) {
+    ifstream fin(fileName);  // Відкриття файлу для читання
+    if (!fin) return 0;      // Якщо файлу немає — повертаємо 0
+    int size;                // Змінна для розміру
+    fin >> size;             // Читання розміру з файлу
+    if (size <= 0 || size > maxSize) return 0; // Перевірка розміру
+    for (int i = 0; i < size; i++) fin >> arr[i]; // Читання елементів у масив
+    fin.close();             // Закриття файлу
+    return size;             // Повернення кількості зчитаних даних
 }
 
-int ConsoleInputDynamicArray_calloc(int sizeMax, pDouble& pA)
-{
-    int size = ConsoleInputSizeArray(sizeMax);
-    pA = (double*)calloc(size, sizeof(double));      // pA = (double*)malloc(size * sizeof(double)); 
-    if (pA == nullptr) { return 0; }
-    for (int i = 0; i < size; i++) {
-        cout << " Array[ " << i << "] "; cin >> pA[i];
-    }
-    return size;
-}
-
-void ConsoleInputVector(int sizeMax, vector<double> &A)
-{
-    int size = ConsoleInputSizeArray(sizeMax);
-    double d;
-    for (int i = 0; i < size; i++) {
-        cout << " Array[ " << i << "] "; cin >> d; A.push_back(d);
-    }
-    return ;
+//  3.2: Запис у бінарний файл
+void WriteArrayBinFile(int n, double* arr, const char* fileName) {
+    ofstream fout(fileName, ios::binary); // Відкриття в бінарному режимі
+    if (!fout) return;                    // Перевірка
+    fout.write((char*)&n, sizeof(int));   // Бінарний запис розміру
+    fout.write((char*)arr, n * sizeof(double)); // Бінарний запис масиву
+    fout.close();                         // Закриття
 }
 
 
-/*
-*  WriteArrayTextFile 
-*
-*/
+// 3.3: сама логіка програм
 
-void WriteArrayTextFile(int n, double *arr, const char *fileName )
-{
-    ofstream fout(fileName);
-    if (fout.fail()) return;
-    fout << n << endl;
-    for (int i = 0; i < n; i++)
-        fout << arr[i] << "   ";
-    fout.close(); //
-}
-/*
-*  ReadArrayTextFile
-*
-*/
+void Task_Dynamic_Solutions() {
+    cout << "\n--- Завдання 3.3 (Динамічні масиви) ---" << endl;
 
+    // Читаємо дані, які ми ввели в Task 3.1
+    double* A = new double[MAX_SIZE]; // Виділення пам'яті під масив А
+    int n = ReadArrayTextFile(MAX_SIZE, A, "A.txt"); // Завантаження даних
+    if (n == 0) { cout << "Помилка: файл A.txt порожній!" << endl; delete[] A; return; }
 
-int ReadArrayTextFile(int n, double* arr, const char* fileName)
-{
-    int size;
-    ifstream fin(fileName);
-    if (fin.fail()) return 0;
-    fin >> size;
-    if (size <= 0) return 0;
-    if (size > n) size = n;   
-    for (int i = 0; i < n; i++)
-       fin>> arr[i];
-    fin.close();
-    return size;
-    
-}
-
-
-void WriteArrayBinFile(int n, double* arr, const char* fileName)
-{
-    //ios_base
-    ofstream bfout(fileName, ios_base::binary);
-    if (bfout.fail()) return;
-    bfout.write((const char*)&n, sizeof(int));
-    std::streamsize  cn = static_cast<std::streamsize>(n) *sizeof(double);
-    bfout.write((const char*)arr, cn);
-    bfout.close();
-}
-
-int ReadArrayBinFile(int n, double* arr, const char* fileName)
-{
-    int size=0;
-    ifstream bfin(fileName, ios_base::binary);
-    if (bfin.fail()) return 0;
-    bfin.read((char*)&size, sizeof(int));
-    if (size <= 0) return 0;
-    if (size > n) size = n;
-    bfin.read((char*)arr, static_cast<std::streamsize>(size) * sizeof(double));
-    bfin.close();
-    // ssdhs
-    return size;
-}
-
-void ShowMainMenu()
-{
-    cout << "    Main Menu  \n";
-    cout << "    1.  Task 1  \n";
-    cout << "    2.  Task 2  \n";
-    cout << "    3.  Task 3  \n";
-  }
-
-void MenuTask()
-{
-    cout << "     Menu Task   \n";
-    cout << "    1.  Local array  \n";
-    cout << "    2.  Dynamic array 1 \n";
-    cout << "    3.  Dynamic array 2  new \n"; 
-    cout << "    4.  Dynamic array : vector \n";
-    cout << "    5.  Exit \n";
-}
-
-void MenuInput()
-{
-    cout << "     Menu Input   \n";
-    cout << "    1.  Console all \n";
-    cout << "    2.  Console - size, array - random \n";
-    cout << "    3.  File 1.txt \n";
-    cout << "    4.  bb    \n";
-    cout << "    5.  Exit \n";
-}
-
-
-/*
-* Задано одновимірний масив А розміру 2N. 
-* Побудувати два масиви В і С розміру N, 
-* включивши  у масив В елементи масиву А з парними індексами,
-* а у С - з непарними.
-*****************
-*  A - in 
-*  B, C - out 
-*/
-void  TestVariant(int N, double* A, double* B, double* C) {
-    for (int i = 0; i < N; i++) {
-        B[i] = A[2 * i];
-        C[i] = A[2 * i + 1];
-    }
-}
-/*
-*  Task  Var
-* 
-* 
-*/
-void TaskV()
-{
-    char ch = '5',t;
-    do {
-        system("cls");
-        MenuTask();
-        ch = getchar();
-        t=getchar();
-            switch (ch) {
-             case '1': cout << " 1 "; break;
-             case '2': cout << " 2 "; break;
-            //
-            case '5': return;
+    // --- Задача 1: Мінімум серед додатних ---
+    double minPositive = -1; // Тимчасове значення для мінімуму
+    int minIdx = -1;         // Індекс мінімуму
+    for (int i = 0; i < n; i++) {
+        if (A[i] > 0) { // Перевірка чи число додатне
+            if (minIdx == -1 || A[i] < minPositive) { // Пошук найменшого
+                minPositive = A[i]; // Оновлення мінімуму
+                minIdx = i;         // Оновлення індексу
             }
-        cout << " Press any key and enter\n";
-        ch = getchar();
-        } while (ch != 27);
-    
-}
-
-void ArrayLocal()
-{
-    double A[1000], B[500], C[500];
-    int n;
-    char ch = '5',t;
-    do {
-        system("cls");
-        MenuTask();
-        ch = getchar();
-        t = getchar();
-        switch (ch) {
-        case '1': cout << " 1 "; break;
-        case '2': cout << " 2 "; break;
-            //
-        case '5': return;
         }
-        cout << " Press any key and enter\n";
-        ch = getchar();
-    } while (ch != 27);
-
-}
-
-
-int main()
-{ 
-    
-    
-    
-    const int MAX_SIZE = 560;
-    std::cout << "Hello World!\n";
-    ShowMainMenu();
-    /*
-    double A[MAX_SIZE], B[MAX_SIZE],C[MAX_SIZE];
-    int n,m;
-    n = RndInputArray(MAX_SIZE, A);
-    WriteArrayTextFile(n, A, "1.txt");
-    m = ReadArrayTextFile(MAX_SIZE, B, "1.txt");
-    cout << " \n m= " << m << endl;
-    for (int i = 0; i < m; i++)
-        cout << B[i] << "   ";
-    WriteArrayBinFile(n, A, "1.bin");
-    m = ReadArrayBinFile(MAX_SIZE, C, "1.bin");
-    cout << " \n m= " << m << endl;
-    for (int i = 0; i < m; i++)
-        cout << C[i] << "   ";
-    cout << "\n  Vector \n";
-    vector<double> vA;
-    ConsoleInputVector(MAX_SIZE, vA);
-    for (auto v : vA) {
-        cout << v << "   ";
     }
-*/
-    TaskV();
-    return 1;
+    cout << "1. Мінімальний додатний: " << (minIdx != -1 ? to_string(minPositive) : "немає")
+         << ", Індекс: " << minIdx << endl;
 
+    //  Задача 2: Максимальний серед від'ємних до першого елемента > T
+    double T; // Число-поріг
+    cout << "Введіть число T для задачі 2: "; // Запит T
+    cin >> T; // Читання T
+    double maxNeg = -1e18; // Дуже мале число для пошуку максимуму
+    int maxNegIdx = -1;    // Індекс максимуму
+    for (int i = 0; i < n; i++) {
+        if (A[i] > T) break; // Вихід з циклу, якщо зустріли число більше T
+        if (A[i] < 0) {      // Перевірка чи від'ємне
+            if (A[i] > maxNeg) { // Пошук найбільшого від'ємного
+                maxNeg = A[i];  // Оновлення максимуму
+                maxNegIdx = i;  // Запис індексу
+            }
+        }
+    }
+    cout << "2. Номер першого макс. від'ємного до T: " << maxNegIdx << endl;
+//  Задача 3: Двовимірний масив (Матриця n x m)
+    int rows = 3, cols = 4; // Приклад розмірів для матриці
+    double** matrix = new double*[rows]; // Створення масиву вказівників (рядки)
+    for (int i = 0; i < rows; i++) matrix[i] = new double[cols]; // Створення стовпців
+
+    cout << "3. Матриця " << rows << "x" << cols << " створена динамічно." << endl;
+    // (Тут можна додати обчислення згідно варіанту для матриці)
+
+    // Звільнення пам'яті
+    for (int i = 0; i < rows; i++) delete[] matrix[i]; // Видалення стовпців
+    delete[] matrix; // Видалення рядків
+    delete[] A;      // Видалення масиву А
 }
 
+//  3.4: Робота з Vector
+void Task_Vector_FromFile() {
+    cout << "\n--- Завдання 3.4 (Vector) ---" << endl;
+    ifstream fin("A.bin", ios::binary); // Відкриття бінарного файлу
+    if (!fin) return; // Перевірка
+    int size; // Змінна розміру
+    fin.read((char*)&size, sizeof(int)); // Читання розміру
+    vector<double> vec(size); // Створення вектора потрібного розміру
+    fin.read((char*)vec.data(), size * sizeof(double)); // Читання даних у вектор
+    fin.close(); // Закриття файлу
+    cout << "Дані з вектора: ";
+    for (double x : vec) cout << x << " "; // Вивід вектора в консоль
+    cout << endl;
+}
+
+//  3.1: Введення вручну
+void Task_TextFile() {
+    cout << "--- Завдання 3.1 ---" << endl;
+    double A[MAX_SIZE]; // Статичний масив
+    int size = ConsoleInputSizeArray(MAX_SIZE); // Розмір
+    for (int i = 0; i < size; i++) { cout << "A[" << i << "]="; cin >> A[i]; } // Ввід
+    WriteArrayTextFile(size, A, "A.txt"); // Запис у текст
+}
+
+//  3.2: Випадкові числа
+void Task_BinaryFile() {
+    cout << "\n--- Завдання 3.2 ---" << endl;
+    int size = ConsoleInputSizeArray(MAX_SIZE); // Розмір
+    double* A = new double[size]; // Динамічний масив
+    srand(time(0)); // Ініціалізація рандому
+    for (int i = 0; i < size; i++) { A[i] = (rand() % 200 - 100) / 1.0; cout << A[i] << " "; } // Генерація
+    WriteArrayBinFile(size, A, "A.bin"); // Запис у бінарний файл
+    delete[] A; // Видалення
+}
+
+// головна функція
+int main() {
+    setlocale(LC_ALL, "Ukrainian"); // Підтримка кирилиці (залежить від терміналу)
+    Task_TextFile();         // Виклик 3.1
+    Task_BinaryFile();       // Виклик 3.2
+    Task_Dynamic_Solutions(); // Виклик 3.3 (Ваші задачі)
+    Task_Vector_FromFile();  // Виклик 3.4
+    return 0; // Кінець програми
+}
